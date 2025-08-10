@@ -38,16 +38,32 @@ public class ReportManager
 }
 ```
 
+
+
 as you know there are multiple tasks and funcitons that has been done with this class and this violates our SRP 
-the problmes start to appear when :  
-1. If the report format changes → GenerateReport() must change.
-2. If PDF formatting changes → ConvertToPdf() must change.
-3. If email sending logic changes → SendEmail() must change. 
 
-just one small change in one function makes us change and edit our main class that has the 3 functions also we need to change this function in each place that was implelneted in 
+Our current class contains multiple responsibilities:
+- `GenerateReport()`
+- `ConvertToPdf()`
+- `SendEmail()`
 
-now how we can solve these issues 
-by seperating each function in each class as shown below :
+
+
+**Examples:**
+1. If the **report format** changes → `GenerateReport()` must change.
+2. If the **PDF formatting** changes → `ConvertToPdf()` must change.
+3. If the **email sending logic** changes → `SendEmail()` must change.
+
+
+
+**Impact:**  
+A small change in one function causes:
+- Editing the main class that contains all three functions.
+- Updating the function everywhere it is used.
+
+
+## Solution: Applying SRP
+Separate each responsibility into its own class.
 
 Applying SRP
 
@@ -89,5 +105,26 @@ here is a diagram that shows the case
 ![Single Responsibility Principle Example](Single_Respons.png)
 
 
+## Test Case from my GP 
 
+### Test Case: User Data Retrieval Service
 
+**Context**  
+In the *Plantopia* system, we have three subclasses — `Worker`, `Admin`, and `Customer` — that all inherit from a base class `User`. The system frequently needs to retrieve user data regardless of the user type.
+
+**Problem**  
+Originally, separate search methods were implemented for each subclass. This led to:  
+- Code duplication  
+- Inconsistent search logic  
+- Violation of the Single Responsibility Principle (SRP), as each class handled both its own responsibilities and search logic.
+
+**Solution**  
+Refactor the search functionality into a dedicated **User Search Service**. This service:  
+- Encapsulates all search-related logic in one place  
+- Can retrieve data for any user type (`Worker`, `Admin`, `Customer`)  
+- Promotes code reuse and consistency across the application
+
+**Outcome**  
+- Reduced code duplication  
+- Improved maintainability  
+- Clear separation of concerns in line with SRP
