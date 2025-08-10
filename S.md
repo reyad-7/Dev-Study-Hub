@@ -6,15 +6,28 @@ As Uncle Bob put it:
 *"There should never be more than one reason for a class to change."*  
 A class should have **one and only one job**.
 
-When a class takes on multiple responsibilities, those concerns get tangled together. This makes the code harder to maintain, test, and extend — because changing one part risks breaking something unrelated.
+When a class takes on multiple responsibilities, those concerns get tangled together. This makes the code harder to maintain, test, and extend — because changing one part risks breaking something unintended.
 
 ---
-## here is an example to get the point 
-first we have  a `ReportManager` class that:
+
+## Here is an example to get the point 
+
+First we have a `ReportManager` class that:
 
 1. Generates a financial report.
 2. Formats it into PDF.
 3. Sends it over email to the client.  
+
+### Class Diagram: Before SRP (Violation)
+
+```mermaid
+classDiagram
+    class ReportManager {
+        +GenerateReport()
+        +ConvertToPdf(reportData)
+        +SendEmail(pdfReport, recipient)
+    }
+```
 
 ```csharp
 public class ReportManager
@@ -38,8 +51,6 @@ public class ReportManager
 }
 ```
 
-
-
 as you know there are multiple tasks and funcitons that has been done with this class and this violates our SRP 
 
 Our current class contains multiple responsibilities:
@@ -47,23 +58,36 @@ Our current class contains multiple responsibilities:
 - `ConvertToPdf()`
 - `SendEmail()`
 
-
-
 **Examples:**
 1. If the **report format** changes → `GenerateReport()` must change.
 2. If the **PDF formatting** changes → `ConvertToPdf()` must change.
 3. If the **email sending logic** changes → `SendEmail()` must change.
-
-
 
 **Impact:**  
 A small change in one function causes:
 - Editing the main class that contains all three functions.
 - Updating the function everywhere it is used.
 
+---
 
 ## Solution: Applying SRP
+
 Separate each responsibility into its own class.
+
+### Class Diagram: After SRP (Solution)
+
+```mermaid
+classDiagram
+    class ReportGenerator {
+        +Generate()
+    }
+    class PdfFormatter {
+        +Format(reportData)
+    }
+    class EmailSender {
+        +Send(pdfReport, recipient)
+    }
+```
 
 Applying SRP
 
@@ -102,15 +126,14 @@ also we can reuse these whole classes in deffernt places with high level of flxi
 
 here is a diagram that shows the case 
 
-![Single Responsibility Principle Example](Single_Respons.png)
-
+---
 
 ## Test Case from my GP 
 
 ### Test Case: User Data Retrieval Service
 
 **Context**  
-In the *Plantopia* system, we have three subclasses — `Worker`, `Admin`, and `Customer` — that all inherit from a base class `User`. The system frequently needs to retrieve user data regardless of the user type.
+In the *Plantopia* system, we have three subclasses — `Worker`, `Admin`, and `Customer` — that all inherit from a base class `User`. The system frequently needs to retrieve user data regardless of type.
 
 **Problem**  
 Originally, separate search methods were implemented for each subclass. This led to:  
@@ -118,11 +141,51 @@ Originally, separate search methods were implemented for each subclass. This led
 - Inconsistent search logic  
 - Violation of the Single Responsibility Principle (SRP), as each class handled both its own responsibilities and search logic.
 
+#### Class Diagram: Before SRP (Violation)
+
+```mermaid
+classDiagram
+    class User {
+        <<abstract>>
+    }
+    class Worker {
+        +Search()
+    }
+    class Admin {
+        +Search()
+    }
+    class Customer {
+        +Search()
+    }
+    User <|-- Worker
+    User <|-- Admin
+    User <|-- Customer
+```
+
 **Solution**  
 Refactor the search functionality into a dedicated **User Search Service**. This service:  
 - Encapsulates all search-related logic in one place  
 - Can retrieve data for any user type (`Worker`, `Admin`, `Customer`)  
 - Promotes code reuse and consistency across the application
+
+#### Class Diagram: After SRP (Solution)
+
+```mermaid
+classDiagram
+    class User {
+        <<abstract>>
+    }
+    class Worker
+    class Admin
+    class Customer
+    class UserSearchService {
+        +Search(user)
+    }
+    User <|-- Worker
+    User <|-- Admin
+    User <|-- Customer
+    UserSearchService --> User : uses
+```
 
 **Outcome**  
 - Reduced code duplication  
