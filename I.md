@@ -1,14 +1,35 @@
 # Interface Segregation Principle (ISP)
 
-Clients should not be forced to depend on methods they do not use 
+Clients should not be forced to depend on methods they do not use.
 
+- Avoid fat interfaces.
+- Clients must not implement unnecessary methods.
 
-- avoid fat interface 
-- clients must not implement unnecessary methods
- 
-instead of making your interface fat and contain many methods that not common to you subcalsses then you should segregte this fat class and devide it into small and relevent interfaces 
+Instead of making your interface fat and containing many methods that are not common to your subclasses, you should segregate this fat class and divide it into small and relevant interfaces.
 
-here is a bad example with ISP Violation 
+---
+
+## ISP Violation Example
+
+Here is a bad example with ISP violation.
+
+### Class Diagram: Before ISP (Violation)
+
+```mermaid
+classDiagram
+    class ISmartDevice {
+        +TurnOn()
+        +TurnOff()
+        +SetTemperature(temperature)
+        +StartRecording()
+        +StopRecording()
+        +ChangeColor(color)
+    }
+    class SmartLight
+    class SecurityCamera
+    ISmartDevice <|.. SmartLight
+    ISmartDevice <|.. SecurityCamera
+```
 
 ```csharp
 public interface ISmartDevice
@@ -68,21 +89,48 @@ public class SecurityCamera : ISmartDevice
         throw new NotImplementedException("Cameras can't change color");
     }
 } 
+```
 
-``` 
-here is you can see a big violation here 
-first the fat interface forced smart light class and security camera to implemment unrelated mehtods 
+Here you can see a big violation here:  
+The fat interface forced SmartLight and SecurityCamera to implement unrelated methods.
 
+---
 
-so how can we solve this 
-we should solve this violation with ISP 
+## Solution: Applying ISP
 
-first we should make this fat interface minimala and focused 
-as shown below 
+We should solve this violation with ISP.  
+First, we should make this fat interface minimal and focused as shown below.
+
+### Class Diagram: After ISP (Solution)
+
+```mermaid
+classDiagram
+    class IOnOffDevice {
+        +TurnOn()
+        +TurnOff()
+    }
+    class ITemperatureControl {
+        +SetTemperature(temperature)
+    }
+    class IRecordingDevice {
+        +StartRecording()
+        +StopRecording()
+    }
+    class IColorChangeable {
+        +ChangeColor(color)
+    }
+    class SmartLight
+    class SecurityCamera
+    class HVACSystem
+    SmartLight ..|> IOnOffDevice
+    SmartLight ..|> IColorChangeable
+    SecurityCamera ..|> IOnOffDevice
+    SecurityCamera ..|> IRecordingDevice
+    HVACSystem ..|> IOnOffDevice
+    HVACSystem ..|> ITemperatureControl
+```
 
 ```csharp
-
-
 public interface IOnOffDevice
 {
     void TurnOn();
@@ -104,13 +152,11 @@ public interface IColorChangeable
 {
     void ChangeColor(string color);
 }
-
 ```
-then we each class will implement only its related needs as showen below 
+
+Now each class will implement only its related needs as shown below:
 
 ```csharp  
-
-
 public class SmartLight : IOnOffDevice, IColorChangeable
 {
     public void TurnOn() => Console.WriteLine("Light turned on");
@@ -132,13 +178,11 @@ public class HVACSystem : IOnOffDevice, ITemperatureControl
     public void TurnOff() => Console.WriteLine("HVAC system turned off");
     public void SetTemperature(int temperature) => Console.WriteLine($"Temperature set to {temperature}°C");
 }
-
 ```
 
-as shown above 
+As shown above:  
+- SmartLight only needs IOnOffDevice, IColorChangeable functions.
+- SecurityCamera only needs IOnOffDevice, IRecordingDevice.
+- HVACSystem only needs IOnOffDevice, ITemperatureControl.
 
-SmartLight  only needs IOnOffDevice, IColorChangeable functions 
-
-SecurityCamera  only needs  IOnOffDevice, IRecordingDevice
-
-and HVACSystem  only needs IOnOffDevice, ITemperatureControl
+---
