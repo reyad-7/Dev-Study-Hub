@@ -1,55 +1,77 @@
 # Dependency Inversion Principle (DIP)
 
-High-level modules should not depend on low-level modules. Both should depend on abstractions 
+High-level modules should not depend on low-level modules. Both should depend on abstractions.
 
+---
 
-##Concepts you should know 
+## Concepts You Should Know
 
-### coupling : 
+### Coupling
+
 Coupling measures how dependent two modules/classes are on each other.
 
-- loose coupling : 
- Modules know as little as possible about each other’s internal details.
- They interact through interfaces, abstractions, or events.
- Changes in one module have minimal impact on others.
+- **Loose Coupling:**  
+  Modules know as little as possible about each other’s internal details.  
+  They interact through interfaces, abstractions, or events.  
+  Changes in one module have minimal impact on others.
 
+- **Tight Coupling:**  
+  One module directly depends on the concrete implementation of another.  
+  Changes in one module force changes in others.
 
-- tight coupling :
--- One module directly depends on the concrete implementation of another.
--- Changes in one module force changes in others.
+### Cohesion
 
-
-### cohesion : 
 Cohesion measures how closely related the responsibilities of a single module/class are.
 
-- High Cohesion
-- A class/module does one well-defined thing (it is also related to SRP mentioned before )
+- **High Cohesion:**  
+  A class/module does one well-defined thing (it is also related to SRP mentioned before).  
+  Example:  
+  - A `UserRepository` class only handles user database operations (no email sending and no order processing).
 
-- Example:
--- A UserRepository class only handles user database operations (no email sending and no order processing)
+- **Low Cohesion:**  
+  A class/module does many unrelated things, making it hard to maintain and test.
 
-- Low Cohesion :
-- A class/module does many unrelated things as a result it Hard to maintain and test.
+---
 
-Our concept is called Dependency Inversion, but it is done with Dependency Injection. You inject your interface or abstract and use this injected object to call any method you want 
+## Dependency Inversion & Dependency Injection
 
+Our concept is called Dependency Inversion, but it is done with Dependency Injection.  
+You inject your interface or abstract and use this injected object to call any method you want.
 
-Dependency Injection: DI is a technique (often used to implement DIP). 
-### It is the way we provide the dependency (the interface implementation) to the class, we usually use 
+- **Dependency Injection (DI):**  
+  A technique (often used to implement DIP).  
+  It is the way we provide the dependency (the interface implementation) to the class.  
+  Most commonly, we use **constructor injection**.
 
-- Constructor injection will be shown later in an example  
+---
 
+## Example: Before DIP (Violation)
 
-## example (before DIP)
+We’ll simulate a payment processing system where initially the code is tightly coupled (DIP violation).
 
-We’ll simulate a payment processing system where initially the code is tightly coupled (DIP violation), and then we’ll fix it with Dependency Inversion Principle.
+### The Problem – DIP Violation
 
+We have an `EcommerceService` that directly depends on concrete payment providers like `PayPalPaymentProcessor` and `StripePaymentProcessor`.  
+This means if we want to add any other method or even a small change in the payment API, we must edit `EcommerceService` — because of high coupling.
 
-The Problem – DIP Violation
-We have an EcommerceService that directly depends on concrete payment providers like PayPalPaymentProcessor and StripePaymentProcessor.
-This means if we want to add any other method or even a small change in the payment API, we must edit EcommerceService — because of high coupling.  
+#### Class Diagram: Before DIP (Violation)
 
-here is the code 
+```mermaid
+classDiagram
+    class PayPalPaymentProcessor {
+        +ProcessPayment(amount)
+    }
+    class StripePaymentProcessor {
+        +ProcessPayment(amount)
+    }
+    class EcommerceService {
+        -PayPalPaymentProcessor _paypalProcessor
+        -StripePaymentProcessor _stripeProcessor
+        +Checkout(amount, method)
+    }
+    EcommerceService --> PayPalPaymentProcessor
+    EcommerceService --> StripePaymentProcessor
+```
 
 ```csharp
 public class PayPalPaymentProcessor
@@ -87,31 +109,52 @@ public class EcommerceService
             _stripeProcessor.ProcessPayment(amount);
     }
 }
-
 ```
 
--the problems without DI
--- EcommerceService knows about every payment processor (tight coupling ).
--- also this is an OCP violation: Adding any new payment method we should modify EcommerceService.
--- Hard to test: Can’t mock payment services easily.
--- Not reusable in different contexts.
+**Problems without DI:**
+- `EcommerceService` knows about every payment processor (**tight coupling**).
+- **OCP violation:** Adding any new payment method requires modifying `EcommerceService`.
+- **Hard to test:** Can’t mock payment services easily.
+- **Not reusable** in different contexts.
 
+---
 
+## Solution: Applying DIP
 
-The Solution – Applying DIP
-We:
+### The Solution – Applying Dependency Inversion Principle
 
-Create an abstraction (IPaymentProcessor) high-level module will depend on .
+1. Create an abstraction (`IPaymentProcessor`) for high-level module to depend on.
+2. Make all payment processors implement this abstraction.
+3. Inject the processor into `EcommerceService` via Dependency Injection.
 
-Make all payment processors implement this abstraction.
+Now `EcommerceService` depends on **abstractions, not concretions**.
 
-Inject the processor into EcommerceService via Dependency Injection.
+#### Class Diagram: After DIP (Solution)
 
-Now EcommerceService depends on abstractions, not concretions .
-so we can use it normally without every where we want 
-
-Code After DIP 
-
+```mermaid
+classDiagram
+    class IPaymentProcessor {
+        <<interface>>
+        +ProcessPayment(amount)
+    }
+    class PayPalPaymentProcessor {
+        +ProcessPayment(amount)
+    }
+    class StripePaymentProcessor {
+        +ProcessPayment(amount)
+    }
+    class ApplePayPaymentProcessor {
+        +ProcessPayment(amount)
+    }
+    class EcommerceService {
+        -IPaymentProcessor _paymentProcessor
+        +Checkout(amount)
+    }
+    IPaymentProcessor <|.. PayPalPaymentProcessor
+    IPaymentProcessor <|.. StripePaymentProcessor
+    IPaymentProcessor <|.. ApplePayPaymentProcessor
+    EcommerceService --> IPaymentProcessor
+```
 
 ```csharp
 // Abstraction
@@ -174,6 +217,12 @@ class Program
         ecommerceService.Checkout(250.00m);
     }
 }
-
 ```
-now with DIP if we want to add another payment method we will not touch ECommerceService we will only create another class that implement our abstract or interface 
+
+**Benefits of DIP:**
+- Add another payment method without touching `EcommerceService`; just create another class that implements `IPaymentProcessor`.
+- High-level modules (business logic) depend on abstractions, not implementations.
+- Code is easier to test, maintain, and extend.
+- Promotes loose coupling and high cohesion.
+
+---
