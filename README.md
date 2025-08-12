@@ -23,11 +23,11 @@ Each principle is explained in detail in its dedicated Markdown file.
 
 | Principle | Description | Link |
 |-----------|-------------|------|
-| 🟢 **S** | Single Responsibility Principle | [Read More »](S.md) |
-| 🟠 **O** | Open/Closed Principle           | [Read More »](O.md) |
-| 🔵 **L** | Liskov Substitution Principle   | [Read More »](L.md) |
-| 🟣 **I** | Interface Segregation Principle | [Read More »](I.md) |
-| 🟡 **D** | Dependency Inversion Principle  | [Read More »](D.md) |
+| 🟢 **S** | Single Responsibility Principle | [Read More »](Solid/S.md) |
+| 🟠 **O** | Open/Closed Principle           | [Read More »](Solid/O.md) |
+| 🔵 **L** | Liskov Substitution Principle   | [Read More »](Solid/L.md) |
+| 🟣 **I** | Interface Segregation Principle | [Read More »](Solid/I.md) |
+| 🟡 **D** | Dependency Inversion Principle  | [Read More »](Solid/D.md) |
 
 ---
 
