@@ -1,66 +1,148 @@
 # Database Fundamentals
 
+> **Goal:** Understand core concepts of databases, including types, structure, and key constraints, with practical examples and diagrams.
 
-##Difference Between RDBMS and DBMS
+---
 
-### DBMS 
+## Table of Contents
 
-A Database Management System (DBMS) is a software that is used to define, create, and maintain a database and provides controlled access to the data.
+- [DBMS vs RDBMS](#difference-between-rdbms-and-dbms)
+- [Relational vs Non-Relational Databases](#relational-database)
+- [SQL Key Constraints](#sql-primary-key-constraint)
+- [Common SQL Constraints](#constraints--rules-to-maintain-data-integrity)
 
-It is a management system that is used to manage the entire flow of data, i.e, the insertion of data or the retrieval of data, how the data is inserted into the database,
-or how fast the data should be retrieved, so DBMS takes care of all these features, as it maintains the uniformity of the database as well does the faster insertions as well as retrievals
+---
+
+## Difference Between RDBMS and DBMS
+
+### DBMS
+
+A **Database Management System (DBMS)** is software used to define, create, and maintain a database, providing controlled access to data.  
+It manages the entire flow of data: insertion, retrieval, and ensures uniformity and efficiency in working with databases.
+
+### RDBMS
+
+A **Relational Database Management System (RDBMS)** is a type of DBMS that organizes data based on relationships and key constraints.  
+It uses tables (schemas), rows (tuples), and enforces integrity and reduces redundancy through relationships.
+
+### Diagram: DBMS vs RDBMS
+
+```mermaid
+classDiagram
+    class DBMS {
+        +Data
+        +Insert()
+        +Retrieve()
+        +Update()
+    }
+    class RDBMS {
+        +Table
+        +Row
+        +Column
+        +Relationships
+        +KeyConstraints
+    }
+    DBMS <|-- RDBMS
+```
+
+---
+
+## Relational Database
+
+A **relational database** stores data in tables composed of rows and columns. Tables are linked using unique identifying keys.
+
+- Designed for **structured data** (well-defined schema)
+- SQL is the standard language for interacting with relational databases
+- Common examples: MySQL, PostgreSQL, Microsoft SQL Server
+
+### Diagram: Relational Database Structure
+
+```mermaid
+erDiagram
+    PERSON {
+        int PersonID PK
+        string LastName
+        string FirstName
+    }
+    ORDER {
+        int OrderID PK
+        int PersonID FK
+        int OrderNumber
+    }
+    PERSON ||--o{ ORDER : "has"
+```
+
+---
+
+## Non-Relational Database
+
+A **non-relational database** does not store data in tables; instead, it chooses the best structure for the data type.
+
+- Designed for **unstructured or loosely defined data** (emails, videos, images, documents)
+- Often called NoSQL databases (may or may not support SQL queries)
+- Types:
+  - **Key-value stores**
+  - **Column-family stores**
+  - **Graph databases**
+  - **Document databases**
+
+Examples: Apache Cassandra, MongoDB
+
+### Diagram: Types of Non-Relational Databases
+
+```mermaid
+flowchart TD
+    A[Non-relational DB] --> B[Key-Value Store]
+    A --> C[Column-Family Store]
+    A --> D[Graph DB]
+    A --> E[Document DB]
+```
 
 
-### RDBMS: 
-It is a type of DBMS; as the name suggests, it deals with relations as well as various key constraints.
-So here we have tables, which are called schemas, and we have rows, which are called tuples. It also aids in the reduction of data redundancy and the preservation of database integrity
 
 
+---
+
+## Summary Table: Relational vs Non-Relational
+
+| Feature           | Relational DB (RDBMS)   | Non-Relational DB (NoSQL)      |
+|-------------------|------------------------|--------------------------------|
+| Structure         | Tables (rows & columns)| Flexible (documents, graphs, etc.) |
+| Data Type         | Structured             | Unstructured/Mixed             |
+| Query Language    | SQL                    | Varies (NoSQL, some support SQL)|
+| Examples          | MySQL, SQL Server      | MongoDB, Cassandra, Redis      |
+| Relationships     | Foreign Keys           | Embedded, references, graph edges |
 
 
-### relational database: 
---A relational database stores data in tables composed of rows and columns. 
-In a relational database, data is contained within a table, which is then linked to data contained within other tables through the use of unique identifying keys. Specifically, relationships between tables are formed when a primary key, which uniquely identifies a row in one table, connects with a foreign key, identifying a row of data in another table. 
+---
 
--- it is designed to store structured data or well-defined data in tables (rows and columns form )
--- SQL is the most common programming language used to interface with relational databases within relational database management systems (RDMS)
+## SQL PRIMARY KEY Constraint
 
---Basic structure of relational db is tables , rows and columns 
--- MySQL --
--- PostgreSQL --
--- Microsoft SQL Server --
+The **PRIMARY KEY** constraint uniquely identifies each record in a table.
 
-### non-relational database
-A non-relational database is a type of database that doesn’t store data in tables, but instead, stores it in whatever format is best for the type of data being stored.
-In effect, non-relational databases are designed to contain *unstructured data*, or loosely defined data like email messages, videos, images,and business documents that aren’t easily standardized.
-They can also be used to store a mix of structured and unstructured data. 
-Non-relational databases are said to be NoSQL, meaning that they don’t use structured query language, even though many NoSQL databases do support SQL queries.
+- Must contain unique, non-null values
+- Only one primary key per table (can be composite)
 
-There are four types of non-relational databases 
-- Key-value stores: In a key-value store, data is assigned a unique identifier, which allows it to be retrieved and sorted.
-- Column-family data stores: In a column-family data store, data is organized in a "keyspace" containing multiple families of different columns.
-- Graph databases: Graph databases store data in nodes and structure them based on their relationships to one another
-- Document databases: Document databases store data within documents, which typically contain one object and all its associated metadata.
+### Example
 
-examples:
--- Apache Cassandra
--- MongoDB
+```sql
+CREATE TABLE Persons (
+    PersonID int NOT NULL,
+    LastName varchar(255) NOT NULL,
+    FirstName varchar(255),
+    PRIMARY KEY (PersonID)
+);
+```
 
+---
 
+## FOREIGN KEY Constraint
 
-### SQL PRIMARY KEY Constraint
+A **FOREIGN KEY** is used to link two tables together. It refers to the primary key in another table.
 
-The **PRIMARY KEY** constraint is used to uniquely identify each record in a table.
-Primary keys must contain unique values and cannot contain NULL values.
-Each table can have only ONE primary key. The primary key can be a single column or a combination of columns (Composite).
+### Example
 
-
-### FOREIGN KEY
-The FOREIGN KEY constraint is a key used to link two tables together.
-A FOREIGN KEY is a field or collection of fields in a table that refers to the PRIMARY KEY in another table.
-
-Example:  a personId foreign key in orders table
-every order should have a person so we reference this order to a person by a foreign key (person id )
+A personId foreign key in orders table links each order to a person.
 
 ```sql
 CREATE TABLE Orders (
@@ -68,22 +150,36 @@ CREATE TABLE Orders (
     OrderNumber int NOT NULL,
     PersonID int,
     PRIMARY KEY (OrderID),
-    FOREIGN KEY (PersonID) REFERENCES Persons(PersonID)   // here is the foreign key that references a person 
+    FOREIGN KEY (PersonID) REFERENCES Persons(PersonID)   -- foreign key references a person
 );
 ```
 
+### Diagram: Foreign Key Relationship
 
+```mermaid
+erDiagram
+    PERSON {
+        int PersonID PK
+        string LastName
+        string FirstName
+    }
+    ORDER {
+        int OrderID PK
+        int PersonID FK
+        int OrderNumber
+    }
+    PERSON ||--o{ ORDER : "has"
+```
 
+---
 
-### Constraints – Rules to maintain data integrity 
+## Constraints – Rules to Maintain Data Integrity
 
-The following constraints are commonly used in SQL:
+SQL constraints ensure the accuracy and reliability of data in the database.
 
--- NOT NULL - Ensures that a column cannot have a NULL value
-  This enforces a field to always contain a value, which means that you cannot insert a new record, or update a record without adding a value to this field.
--- UNIQUE - Ensures that all values in a column are different
-  You can define Unique constraints on multiple columns as shown below 
-  
+- **NOT NULL**: Ensures a column cannot have a NULL value
+- **UNIQUE**: Ensures all values in a column are different
+
 ```sql
 CREATE TABLE Persons (
     ID int NOT NULL,
@@ -94,17 +190,13 @@ CREATE TABLE Persons (
 );
 ```
 
--- PRIMARY KEY - A combination of a NOT NULL and UNIQUE. Uniquely identifies each row in a table
+- **PRIMARY KEY**: Uniquely identifies each row (combines NOT NULL + UNIQUE)
+- **FOREIGN KEY**: Prevents actions that would destroy links between tables
+    - E.g., prevents deleting a person who has orders
+    - Validates insertion: referenced value must exist
+- **CHECK**: Ensures values in a column satisfy a condition
 
--- FOREIGN KEY - Prevents actions that would destroy links between tables
-  it is used to prevent actions that will destroy links between tables like deleting that person that already has an order 
-  so how can i handle the case of deletion this reference (person id ) in order  table also you should handle the case of inserting invalid data into the foreign key columns as it validates insertion
-  Values should exist in our data  
-
--- CHECK - Ensures that the values in a column satisfy a specific condition
-  it like a condition should be satisfied to be able to insert to this column 
-  see example below 
-  ``` sql
+```sql
 CREATE TABLE Persons (
     ID int NOT NULL,
     LastName varchar(255) NOT NULL,
@@ -113,9 +205,9 @@ CREATE TABLE Persons (
     CHECK (Age>=18)
 );
 ```
-here is the age value should be greater than or equal 18 
+Here, Age must be 18 or older.
 
--- DEFAULT - Sets a default value for a column if no value is specified
-  It is used to insert the specified default value instead of null ***if you did not insert any other value***  
+- **DEFAULT**: Sets a default value for a column if no value is specified
+---
 
-  
+> Use these fundamentals to choose and design databases that fit your application's needs.
