@@ -1,4 +1,11 @@
-# Software Design Notes: SOLID Principles & OOP Concepts
+
+# Dev Study Hub
+[![Project Status: WIP ▶](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+
+*(Under active development—stay tuned!)*
+
+---
+
 
 Welcome!  
 This repository provides clear explanations, real-world C# code examples, diagrams, and visualizations for both **SOLID principles** and general **Object-Oriented Programming (OOP) concepts**. Use these notes to deepen your understanding and apply these ideas in real projects, interviews, or teaching.
