@@ -1,37 +1,46 @@
 # Normalization
 
-- here we try to have a good relations between tables so if we want to add we will not add any redundant data , if we want to update anything we do not want to update a huge number of records based on these change.
+> **Goal:** Understand how normalization organizes relational data to eliminate redundancy and anomalies.
 
-- notice here all operations are coupled with each others (insert , delete and update )
+---
 
-- so we try to normalize our schema or our talbes structure to keep it simple and scalable 
+## Why Normalize?
+
+- We want to build good relationships between tables, avoiding redundant data and excessive updates.
+- Insert, delete, and update operations are tightly coupled—bad design means lots of repeated work.
+- Normalizing our schema keeps things simple, scalable, and maintainable.
+
+---
+
+## Why Normalize? (With Diagram)
+
+```mermaid
+flowchart LR
+    big_table["Big Fat Table"]
+    small_tables["Normalized Tables"]
+    big_table -- Decompose --> small_tables
+    small_tables -- "References (FK)" --> big_table
+```
 
 
-These are the problems we have 
+## What is Normalization?
 
-so we will continue exploring normalization to conquer this problem 
+Normalization is the process of decomposing big, complex tables into smaller tables with logical relations.  
+We divide tables based on how attributes depend on keys and on each other.
 
+---
 
-so, what is Normalization: the process of decomposing big fat tables and trying to break them down to have tables with smaller relations 
+## First Normal Form (1NF)
 
-so how can we divide tables ?? 
-Based on what? 
-
-## First Normal Form (1St NF) : 
-conquer 
-- composite attributes
+**1NF solves:**
+- Composite attributes
 - Multivalued attributes
-- nested relations
+- Nested relations
 
-Now what is our work in this from ?
-first we try to get and know which attributes cause a redundancy in our data rows (redundant here means repeating values in rows)
-so our work is to get these attributes that cause redundancy and try to put in separate tables and reference to them with the main table primary key ...
+**Key idea:**  
+Identify attributes causing redundancy (repeated values in rows), move them into separate tables, and reference them via primary keys.
 
-
-so our steps : 
-you search for a violation then you try to fix it 
-
-example :
+### Example: Before 1NF
 
 | ContactID | Name    | PhoneNumbers                | Street          | City  | Country |
 | --------- | ------- | --------------------------- | --------------- | ----- | ------- |
@@ -39,16 +48,35 @@ example :
 | 2         | Mariam  | `015-333`                   | 5 Tahrir Sq     | Cairo | Egypt   |
 | 3         | Youssef | `010-444, 011-555, 012-666` | 89 Pyramids Ave | Giza  | Egypt   |
 
+**Issue:**  
+PhoneNumbers is storing multiple values in a single cell (not atomic) → violates 1NF.  
+Adding Phone1, Phone2, Phone3 is a repeating group → also violates 1NF.
 
-What’s wrong here?
-PhoneNumbers stores multiple values in one cell (not atomic) → violates 1NF.
-If you try to “fix” it by adding Phone1, Phone2, Phone3, that becomes a repeating group → also violates 1NF.
+### After 1NF: Atomic Columns
 
+Split the multi-valued attribute into a separate table:
 
-Converting to 1NF (good design)
-Split multi-valued attributes into a separate table
+```mermaid
+erDiagram
+    CONTACTS {
+        int ContactID PK
+        string Name
+        string Street
+        string City
+        string Country
+    }
+    CONTACTPHONES {
+        int PhoneID PK
+        int ContactID FK
+        string PhoneNumber
+        string PhoneType
+    }
+    CONTACTS ||--o{ CONTACTPHONES : "has"
+```
 
-```sql 
+**SQL Structure:**
+
+```sql
 CREATE TABLE Contacts (
   ContactID   INT PRIMARY KEY,
   Name        VARCHAR(100),
@@ -57,20 +85,17 @@ CREATE TABLE Contacts (
   Country     VARCHAR(100)
 );
 
-```
-
-```sql 
 CREATE TABLE ContactPhones (
   PhoneID     INT PRIMARY KEY,
   ContactID   INT NOT NULL,
   PhoneNumber VARCHAR(30) NOT NULL,
-  PhoneType   VARCHAR(20), -- e.g., Mobile, Home, Work
+  PhoneType   VARCHAR(20), -- Mobile, Home, Work
   CONSTRAINT FK_ContactPhones_Contacts
     FOREIGN KEY (ContactID) REFERENCES Contacts(ContactID)
 );
-
 ```
-here are some sample data to jsut practice 
+
+**Sample Data:**
 
 ```sql
 INSERT INTO Contacts (ContactID, Name, Street, City, Country) VALUES
@@ -85,11 +110,9 @@ INSERT INTO ContactPhones (PhoneID, ContactID, PhoneNumber, PhoneType) VALUES
 (104, 3, '010-444', 'Mobile'),
 (105, 3, '011-555', 'Work'),
 (106, 3, '012-666', 'Home');
-
 ```
 
-if you want to get All phones for a contact:
-
+**Query: Get all phones for a contact**
 ```sql
 SELECT c.Name, p.PhoneNumber, p.PhoneType
 FROM Contacts c
@@ -97,27 +120,23 @@ JOIN ContactPhones p ON p.ContactID = c.ContactID
 WHERE c.Name = 'Youssef';
 ```
 
+**Result:**  
+You avoided redundancy and repeating columns by isolating multivalued attributes.
 
-so as you see in the example above, you isolated the column with MV attributes into a separate table to conquer redundancy and prevent repeated columns in data rows 
+---
 
+## Second Normal Form (2NF)
 
+**Requires:** Table is already in 1NF.
 
+**2NF solves:**  
+Partial dependency—attributes that depend on only part of a composite primary key.
 
-## second normal form (2ND NF)
+**Key idea:**  
+Every attribute should depend on the whole primary key, not just a part of it.  
+If an attribute depends on only part of the key, move it into a separate table.
 
-### you should be in 1St NF 
-
-- you try to conquer partial dependency between an attribute and the primary key 
-
--- if you have a composite primary key 
--- so you should isolate and make all attributes in one table depends on the fully primary key in this table 
--- so if you have an attribute that depend on only a part of the primary key so you separate this attribte with this only part of this primary key in a separate table and reference to it with the primary key 
-
-
-
-example to showcase and understand 
-
-here is our data 
+### Example: Partial Dependencies
 
 | StudentID | CourseID | StudentName | Major | CourseTitle | Credits | Grade |
 | --------- | -------- | ----------- | ----- | ----------- | ------- | ----- |
@@ -125,42 +144,54 @@ here is our data
 | 1001      | CS102    | Ahmed Ali   | CS    | Networks    | 3       | B+    |
 | 1002      | CS101    | Sara Hassan | IS    | Databases   | 3       | A     |
 
+**Problems:**
+- StudentName, Major depend only on StudentID.
+- CourseTitle, Credits depend only on CourseID.
+- Only Grade depends on both StudentID and CourseID.
 
-What’s wrong?
+**Update/Insert/Delete Anomalies:**  
+- Changing “Databases” title requires updating many rows.
+- Can't add a new course until a student enrolls.
+- Deleting last enrollment in CS101 loses course info.
 
-- StudentName, Major depend only on StudentID (a part of the key).
-- CourseTitle, Credits depend only on CourseID (the other part of the key).
-- Only Grade depends on the whole key (StudentID, CourseID).
+### After 2NF: Remove Partial Dependencies
 
+```mermaid
+erDiagram
+    STUDENTS {
+        int StudentID PK
+        string StudentName
+        string Major
+    }
+    COURSES {
+        string CourseID PK
+        string CourseTitle
+        int Credits
+    }
+    ENROLLMENTS {
+        int StudentID FK
+        string CourseID FK
+        string Grade
+    }
+    STUDENTS ||--o{ ENROLLMENTS : "enrolls"
+    COURSES ||--o{ ENROLLMENTS : "has"
+```
 
-This creates anomalies:
-
-- Update anomaly: Change “Databases” title? You must update many rows.
-- Insert anomaly: You can’t insert a new course until a student enrolls.
-- Delete anomaly: Deleting the last enrollment in CS101 loses the course info.
-
-
-
-now we will restructure our db schema again 
-
+**SQL Structure:**
 
 ```sql
-
--- Students: facts about the student (depend on StudentID)
 CREATE TABLE Students (
   StudentID   INT PRIMARY KEY,
   StudentName VARCHAR(100) NOT NULL,
   Major       VARCHAR(50)  NOT NULL
 );
 
--- Courses: facts about the course (depend on CourseID)
 CREATE TABLE Courses (
   CourseID    VARCHAR(20) PRIMARY KEY,
   CourseTitle VARCHAR(100) NOT NULL,
   Credits     INT NOT NULL CHECK (Credits > 0)
 );
 
--- Enrollments: relationship facts (depend on the whole (StudentID, CourseID))
 CREATE TABLE Enrollments (
   StudentID INT         NOT NULL,
   CourseID  VARCHAR(20) NOT NULL,
@@ -169,10 +200,9 @@ CREATE TABLE Enrollments (
   FOREIGN KEY (StudentID) REFERENCES Students(StudentID),
   FOREIGN KEY (CourseID)  REFERENCES Courses(CourseID)
 );
-
 ```
-and here a query to get all info you want 
 
+**Query: Get all info**
 ```sql
 SELECT s.StudentID, s.StudentName, s.Major,
        c.CourseID, c.CourseTitle, c.Credits,
@@ -180,47 +210,26 @@ SELECT s.StudentID, s.StudentName, s.Major,
 FROM Enrollments e
 JOIN Students   s ON s.StudentID = e.StudentID
 JOIN Courses    c ON c.CourseID  = e.CourseID;
-
 ```
-now :
-- all students relevant data are stored in student table 
-- course relevent data are stored in courses table 
-- enrollments data are stored in table contain full key that major depend on it 
 
+**Result:**  
+- Student data in Students table
+- Course data in Courses table
+- Enrollment (with grade) in Enrollments table
 
+---
 
+## Third Normal Form (3NF)
 
+**Requires:** Table is already in 2NF.
 
+**3NF solves:**  
+Transitive dependency—non-key attribute depends on another non-key attribute.
 
+**Key idea:**  
+Every non-key attribute should depend only on the key, not on other non-key attributes.
 
-## third normal from (3RD NF)
-
-you should be in 2ND NF 
-
-You try to conquer 
-- transitive dependency 
-
-what is transitive dependency? 
-
-Non-key attribute depends on another non-key attribute we will see an example to show and explain more 
-But for simplicity, an attribute depends on and is formed by another attribute, and this attribute is not a primary key of this table 
-
-
-here is another example for definition 
-
-A table is in Third Normal Form if:
-
-- It is already in 2NF (no partial dependencies on a composite key).
-
-- No non-key column depends on another non-key column (i.e., no transitive dependencies).
-
-### Quick mantra: Every non-key attribute depends on “the key, the whole key, and nothing but the key.”
-
-
-
-so let us have an example to explain 
-first we have this table with violations 
-
+### Example: Transitive Dependency
 
 | EmpID | EmpName | DeptID | DeptName    | DeptLocation | ManagerID | ManagerName |
 | ----: | ------- | ------ | ----------- | ------------ | --------- | ----------- |
@@ -228,42 +237,50 @@ first we have this table with violations
 |     2 | Salma   | D10    | Accounting  | Cairo        | M1        | Mona        |
 |     3 | Youssef | D20    | Engineering | Giza         | M2        | Kareem      |
 
+**Functional dependencies:**
+- EmpID → EmpName, DeptID
+- DeptID → DeptName, DeptLocation, ManagerID
+- ManagerID → ManagerName
 
-here is the Functional dependencies (Normal dependencies):
+**Anomalies:**
+- Renaming “Accounting” requires updating many rows.
+- Can't add department until an employee exists.
+- Deleting last employee in D10 loses department/manager info.
 
-EmpID → EmpName, DeptID
+**Transitive dependency:**  
+DeptName, DeptLocation, ManagerID, ManagerName depend on DeptID and ManagerID, not on EmpID.
 
-DeptID → DeptName, DeptLocation, ManagerID
+### After 3NF: Remove Transitive Dependencies
 
-ManagerID → ManagerName
+```mermaid
+erDiagram
+    MANAGERS {
+        string ManagerID PK
+        string ManagerName
+    }
+    DEPARTMENTS {
+        string DeptID PK
+        string DeptName
+        string DeptLocation
+        string ManagerID FK
+    }
+    EMPLOYEES {
+        int EmpID PK
+        string EmpName
+        string DeptID FK
+    }
+    MANAGERS ||--o{ DEPARTMENTS : "manages"
+    DEPARTMENTS ||--o{ EMPLOYEES : "has"
+```
 
-
-
-Anomalies:
-
-Update: Renaming “Accounting” requires updating many rows.
-
-Insert: Can’t add a new Department until an Employee exists.
-
-Delete: Deleting the last employee in D10 loses the department & manager info.
-
-
-but if you noticed DeptName, DeptLocation, ManagerID and ManagerName dont fully depend on primary key (EmpID) they depend on other attributes (non-key attributes)
-so there is a transitive dpendncies here with these attributes 
-so what we need to do ??
-first we will isolate these attributes with their key that they depend on in a separate tables 
-
-so we will have **3** tables 
-
+**SQL Structure:**
 
 ```sql
--- Managers: facts about managers
 CREATE TABLE Managers (
   ManagerID   VARCHAR(10) PRIMARY KEY,
   ManagerName VARCHAR(100) NOT NULL
 );
 
--- Departments: facts about departments (each has a manager)
 CREATE TABLE Departments (
   DeptID       VARCHAR(10) PRIMARY KEY,
   DeptName     VARCHAR(100) NOT NULL,
@@ -272,18 +289,15 @@ CREATE TABLE Departments (
   FOREIGN KEY (ManagerID) REFERENCES Managers(ManagerID)
 );
 
--- Employees: facts about employees
 CREATE TABLE Employees (
   EmpID   INT PRIMARY KEY,
   EmpName VARCHAR(100) NOT NULL,
   DeptID  VARCHAR(10)  NOT NULL,
   FOREIGN KEY (DeptID) REFERENCES Departments(DeptID)
 );
-
 ```
 
-and here is a query to show all data view that was before 
-
+**Query: View all employee/department/manager info**
 ```sql
 SELECT e.EmpID, e.EmpName,
        d.DeptID, d.DeptName, d.DeptLocation,
@@ -291,5 +305,9 @@ SELECT e.EmpID, e.EmpName,
 FROM Employees e
 JOIN Departments d ON d.DeptID = e.DeptID
 JOIN Managers    m ON m.ManagerID = d.ManagerID;
+```
 
-``
+---
+
+> **Summary:**  
+Normalization is all about organizing data to reduce redundancy, avoid anomalies, and keep your database scalable and reliable. Each normal form builds on the previous, isolating dependencies at every step.
