@@ -224,7 +224,7 @@ JOIN Courses    c ON c.CourseID  = e.CourseID;
 **Requires:** Table is already in 2NF.
 
 **3NF solves:**  
-Transitive dependency—non-key attribute depends on another non-key attribute.
+Transitive dependency—non-key *(non primary key attribute)* attribute depends on another non-key attribute.
 
 **Key idea:**  
 Every non-key attribute should depend only on the key, not on other non-key attributes.
